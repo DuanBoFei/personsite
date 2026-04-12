@@ -1,6 +1,7 @@
 import { ThemeProvider } from './contexts/ThemeContext';
 import { useTheme } from './hooks/useTheme';
 import { AboutSection } from './components/AboutSection';
+import { BlogSection } from './components/blog/BlogSection';
 import { HeroSection } from './components/HeroSection';
 import { Navigation } from './components/Navigation';
 import { ProjectSection } from './components/ProjectSection';
@@ -18,6 +19,7 @@ function AppContent() {
         <HeroSection isDark={isDark} />
         <AboutSection isDark={isDark} />
         <ProjectSection isDark={isDark} />
+        <BlogSection isDark={isDark} />
         <section
           id="contact"
           className={`min-h-screen py-20 px-6 md:px-8 scroll-mt-16 flex items-center justify-center ${

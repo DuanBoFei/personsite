@@ -9,7 +9,7 @@ export function Navigation({ isDark = false }: NavigationProps) {
 
   // Track active section using Intersection Observer
   useEffect(() => {
-    const sections = ['hero', 'about', 'projects', 'contact'];
+    const sections = ['hero', 'about', 'projects', 'blog', 'contact'];
     const observers: IntersectionObserver[] = [];
 
     sections.forEach((sectionId) => {
@@ -51,6 +51,7 @@ export function Navigation({ isDark = false }: NavigationProps) {
     { id: 'hero', label: '首页' },
     { id: 'about', label: '关于' },
     { id: 'projects', label: '项目' },
+    { id: 'blog', label: '博客' },
     { id: 'contact', label: '联系我' },
   ];
 

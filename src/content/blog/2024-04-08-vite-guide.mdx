@@ -1,0 +1,65 @@
+---
+title: "Vite 构建工具入门指南"
+date: "2024-04-08"
+tags: ["Vite", "构建工具", "前端工程化"]
+excerpt: "Vite 是下一代前端构建工具，本文介绍其核心特性和使用方法。"
+---
+
+# Vite 构建工具入门指南
+
+## 什么是 Vite？
+
+Vite（法语意为"快速"）是一种新型前端构建工具，能够显著提升前端开发体验。
+
+## 核心特性
+
+### 1. 极速的冷启动
+
+Vite 使用原生 ES 模块，无需打包即可启动开发服务器：
+
+```bash
+# 创建 Vite 项目
+npm create vite@latest my-app -- --template react-ts
+
+# 进入项目
+cd my-app
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+### 2. 即时的热模块替换 (HMR)
+
+Vite 提供快速的 HMR，无论应用大小如何，更新都是即时的。
+
+### 3. 优化的构建
+
+生产构建使用 Rollup，输出高度优化的静态资源：
+
+```bash
+npm run build
+```
+
+## 配置 Vite
+
+`vite.config.ts` 示例：
+
+```ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  base: '/my-app/',
+  build: {
+    outDir: 'dist',
+  },
+})
+```
+
+## 总结
+
+Vite 让前端开发变得更加高效和愉悦，是现代化前端项目的首选构建工具。

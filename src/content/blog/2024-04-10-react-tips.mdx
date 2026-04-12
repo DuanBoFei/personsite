@@ -1,0 +1,64 @@
+---
+title: "React 开发技巧分享"
+date: "2024-04-10"
+tags: ["React", "前端", "TypeScript"]
+excerpt: "分享一些在日常开发中常用的 React 技巧和最佳实践。"
+---
+
+# React 开发技巧
+
+## 1. 使用自定义 Hook 复用逻辑
+
+自定义 Hook 是 React 中复用状态逻辑的最佳方式：
+
+```tsx
+function useLocalStorage(key: string, initialValue: string) {
+  const [value, setValue] = useState(() => {
+    const stored = localStorage.getItem(key);
+    return stored ?? initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+```
+
+## 2. 性能优化
+
+使用 `React.memo` 和 `useMemo` 避免不必要的重渲染：
+
+```tsx
+const ExpensiveComponent = React.memo(function ExpensiveComponent({ data }) {
+  const processedData = useMemo(() => {
+    return data.map(item => expensiveOperation(item));
+  }, [data]);
+
+  return <div>{processedData}</div>;
+});
+```
+
+## 3. 类型安全的 Context
+
+使用 TypeScript 创建类型安全的 Context：
+
+```tsx
+interface ThemeContextValue {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+}
+```
+
+持续更新中...
