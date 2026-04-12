@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Theme, ThemeContextType } from '../types/theme';
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

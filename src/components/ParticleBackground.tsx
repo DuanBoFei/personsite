@@ -69,7 +69,6 @@ export function ParticleBackground({ isDark = false }: ParticleBackgroundProps) 
     const particles = particlesRef.current;
     const connectionDistance = 100;
     const particleColor = isDark ? 'rgba(99, 102, 241, 0.5)' : 'rgba(99, 102, 241, 0.3)';
-    const lineColor = isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.1)';
 
     // Draw connections
     for (let i = 0; i < particles.length; i++) {

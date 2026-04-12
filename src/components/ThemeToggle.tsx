@@ -1,7 +1,7 @@
 import { useTheme } from '../hooks/useTheme';
 
 export function ThemeToggle() {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
 
   return (
     <button
