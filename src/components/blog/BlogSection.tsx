@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { BlogPost } from '../../types/blog';
-import { getRecentPosts } from '../../lib/blog';
+import { getRecentPosts, getAllPosts } from '../../lib/blog';
 import { BlogCard } from './BlogCard';
 import { BlogPost as BlogPostDetail } from './BlogPost';
 
@@ -10,8 +10,11 @@ interface BlogSectionProps {
 
 export function BlogSection({ isDark }: BlogSectionProps) {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const recentPosts = getRecentPosts(3);
+  const allPosts = getAllPosts();
 
+  // 显示文章详情
   if (selectedPost) {
     return (
       <BlogPostDetail
@@ -56,7 +59,7 @@ export function BlogSection({ isDark }: BlogSectionProps) {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentPosts.map((post) => (
+              {(showAll ? allPosts : recentPosts).map((post) => (
                 <BlogCard
                   key={post.slug}
                   post={post}
@@ -66,34 +69,33 @@ export function BlogSection({ isDark }: BlogSectionProps) {
               ))}
             </div>
 
-            <div className="text-center mt-12">
-              <button
-                onClick={() => {
-                  // TODO: 展开显示更多文章或跳转到独立博客列表页
-                  alert('更多文章功能即将推出');
-                }}
-                className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                  isDark
-                    ? 'bg-indigo-600/80 hover:bg-indigo-500/80 text-white'
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg'
-                }`}
-              >
-                查看全部
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {allPosts.length > 3 && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                    isDark
+                      ? 'bg-indigo-600/80 hover:bg-indigo-500/80 text-white'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg'
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </button>
-            </div>
+                  {showAll ? '收起' : '查看全部'}
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-300 ${showAll ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

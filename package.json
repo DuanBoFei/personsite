@@ -16,6 +16,7 @@
     "@mdx-js/react": "^3.1.1",
     "@mdx-js/rollup": "^3.1.1",
     "@tailwindcss/vite": "^4.2.2",
+    "decap-cms-app": "^3.11.0",
     "gray-matter": "^4.0.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

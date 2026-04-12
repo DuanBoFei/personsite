@@ -103,8 +103,34 @@ export function getRecentPosts(count: number = 3): BlogPost[] {
   return getAllPosts().slice(0, count);
 }
 
-export function getPostBySlug(slug: string): BlogPost | undefined {
-  return posts.find(post => post.slug === slug);
+export function getPostBySlug(slug: string): BlogPost | null {
+  const post = posts.find(post => post.slug === slug);
+  return post || null;
+}
+
+// 生成文章摘要（如果 excerpt 为空，从 content 截取）
+export function generateExcerpt(content: string, maxLength: number = 200): string {
+  // 移除 Markdown 标记
+  const plainText = content
+    .replace(/#+ /g, '') // 移除标题标记
+    .replace(/\*\*/g, '') // 移除粗体标记
+    .replace(/\*/g, '') // 移除斜体标记
+    .replace(/`{3}[\s\S]*?`{3}/g, '') // 移除代码块
+    .replace(/`([^`]+)`/g, '$1') // 移除行内代码标记
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 将链接转换为文本
+    .replace(/\n+/g, ' ') // 将换行转换为空格
+    .trim();
+
+  if (plainText.length <= maxLength) {
+    return plainText;
+  }
+
+  // 截取到最大长度，并在单词边界处截断
+  const truncated = plainText.substring(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  const result = lastSpaceIndex > 0 ? truncated.substring(0, lastSpaceIndex) : truncated;
+
+  return result + '...';
 }
 
 export function parseFrontmatter(fileContent: string): { meta: BlogPostMeta; content: string } {
