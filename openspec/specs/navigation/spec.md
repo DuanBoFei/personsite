@@ -1,7 +1,7 @@
 # navigation Specification
 
 ## Purpose
-TBD - created by archiving change add-navigation. Update Purpose after archive.
+定义导航栏的行为规范，包括固定显示、导航链接、平滑滚动、当前链接高亮、响应式布局和主题适配。
 ## Requirements
 ### Requirement: 导航栏固定显示
 Navigation 组件 SHALL 固定在页面顶部，始终可见。
@@ -29,7 +29,7 @@ Navigation 组件 SHALL 固定在页面顶部，始终可见。
 
 #### Scenario: 导航栏显示导航链接
 - **WHEN** 页面加载
-- **THEN** 导航栏右侧显示三个链接：首页、项目、联系我
+- **THEN** 导航栏右侧显示四个链接：首页、项目、博客、联系我
 
 ---
 
@@ -49,6 +49,11 @@ Navigation 组件 SHALL 固定在页面顶部，始终可见。
 - **WHEN** 用户点击"联系我"链接
 - **THEN** 页面平滑滚动到 #contact section
 - **AND** URL 更新为包含 #contact
+
+#### Scenario: 点击"博客"链接
+- **WHEN** 用户点击"博客"链接
+- **THEN** 页面平滑滚动到 #blog section
+- **AND** URL 更新为包含 #blog
 
 ---
 
@@ -88,6 +93,12 @@ Navigation 组件 SHALL 固定在页面顶部，始终可见。
 - **WHEN** 用户滚动到项目区域
 - **THEN** "项目"链接显示高亮样式
 - **AND** "首页"链接取消高亮
+
+#### Scenario: Blog Section 可见时高亮"博客"
+- **GIVEN** Blog Section 在当前视口
+- **WHEN** 用户滚动到博客区域
+- **THEN** "博客"链接显示高亮样式
+- **AND** "项目"链接取消高亮
 
 ---
 
