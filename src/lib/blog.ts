@@ -56,10 +56,13 @@ function parseMdxFile(path: string, fileContent: string): BlogPost | null {
 
     const slug = extractSlugFromPath(path);
 
+    // 确保 date 是字符串格式 (YYYY-MM-DD)
+    const dateString = dateObj.toISOString().split('T')[0];
+
     return {
       slug,
       title: data.title,
-      date: data.date,
+      date: dateString,
       tags,
       excerpt,
       content: body
