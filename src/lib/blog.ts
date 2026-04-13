@@ -1,122 +1,89 @@
+import matter from 'gray-matter';
 import type { BlogPost, BlogPostMeta } from '../types/blog';
 
-// 示例文章数据（实际项目中可以通过 import.meta.glob 加载 MDX 文件）
-const posts: BlogPost[] = [
-  {
-    slug: 'ce-shi',
-    title: '测试',
-    date: '2026-04-13',
-    tags: ['测试1'],
-    excerpt: '这是一次测试',
-    content: `
-## 代码示例
+// 构建时动态导入所有 MDX 文件（Vite 特性）
+const modules = import.meta.glob('/src/content/blog/*.mdx', {
+  eager: true,
+  as: 'raw'
+}) as Record<string, string>;
 
-\`\`\`tsx
-function App() {
-   return <h1>Hello World</h1>
+/**
+ * 从文件名提取 slug（移除日期前缀）
+ * 例如: /src/content/blog/2024-04-12-hello-world.mdx -> hello-world
+ * 例如: /src/content/blog/2026-04-13-测试.mdx -> 测试
+ */
+function extractSlugFromPath(path: string): string {
+  const filename = path.replace('/src/content/blog/', '').replace(/\.mdx$/, '');
+  // 移除日期前缀 (YYYY-MM-DD-)
+  return filename.replace(/^\d{4}-\d{2}-\d{2}-/, '');
 }
-\`\`\`
-    `.trim()
-  },
-  {
-    slug: 'hello-world',
-    title: 'Hello World - 开启我的博客之旅',
-    date: '2024-04-12',
-    tags: ['随笔', '开始'],
-    excerpt: '这是我的第一篇博客文章，欢迎来到我的个人博客。',
-    content: `
-# Hello World
 
-欢迎来到我的博客！这里将记录我的技术学习、项目经验和生活感悟。
+/**
+ * 解析单个 MDX 文件，提取 frontmatter 和正文
+ */
+function parseMdxFile(path: string, fileContent: string): BlogPost | null {
+  try {
+    const { data, content: body } = matter(fileContent);
 
-## 关于这个博客
+    // 验证必填字段
+    if (!data.title || typeof data.title !== 'string') {
+      console.warn(`[blog] 跳过文件 ${path}: 缺少 title 字段`);
+      return null;
+    }
 
-使用 React + Vite + Tailwind CSS 构建，支持亮/暗模式切换。
+    if (!data.date) {
+      console.warn(`[blog] 跳过文件 ${path}: 缺少 date 字段`);
+      return null;
+    }
 
-## 代码示例
+    // 解析日期
+    const dateObj = new Date(data.date);
+    if (isNaN(dateObj.getTime())) {
+      console.warn(`[blog] 跳过文件 ${path}: 无效的 date 格式 "${data.date}"`);
+      return null;
+    }
 
-\`\`\`tsx
-function Welcome() {
-  return <h1>欢迎来到我的博客</h1>;
-}
-\`\`\`
+    // 处理 tags（可能是数组或字符串）
+    let tags: string[] = [];
+    if (Array.isArray(data.tags)) {
+      tags = data.tags.filter((t): t is string => typeof t === 'string');
+    } else if (typeof data.tags === 'string') {
+      tags = [data.tags];
+    }
 
-期待与你的交流！
-    `.trim()
-  },
-  {
-    slug: 'react-tips',
-    title: 'React 开发技巧分享',
-    date: '2024-04-10',
-    tags: ['React', '前端'],
-    excerpt: '分享一些在日常开发中常用的 React 技巧和最佳实践。',
-    content: `
-# React 开发技巧
+    // 处理 excerpt（可选字段）
+    const excerpt = data.excerpt || generateExcerpt(body, 200);
 
-## 1. 使用自定义 Hook 复用逻辑
+    const slug = extractSlugFromPath(path);
 
-\`\`\`tsx
-function useLocalStorage(key: string, initialValue: string) {
-  const [value, setValue] = useState(() => {
-    const stored = localStorage.getItem(key);
-    return stored ?? initialValue;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(key, value);
-  }, [key, value]);
-
-  return [value, setValue];
-}
-\`\`\`
-
-## 2. 性能优化
-
-使用 React.memo 和 useMemo 避免不必要的重渲染。
-    `.trim()
-  },
-  {
-    slug: 'vite-guide',
-    title: 'Vite 构建工具入门指南',
-    date: '2024-04-08',
-    tags: ['Vite', '构建工具', '前端工程化'],
-    excerpt: 'Vite 是下一代前端构建工具，本文介绍其核心特性和使用方法。',
-    content: `
-# Vite 构建工具入门指南
-
-## 什么是 Vite？
-
-Vite（法语意为"快速"）是一种新型前端构建工具，能够显著提升前端开发体验。
-
-## 核心特性
-
-### 1. 极速的冷启动
-
-Vite 使用原生 ES 模块，无需打包即可启动开发服务器。
-
-### 2. 即时的热模块替换 (HMR)
-
-Vite 提供快速的 HMR，无论应用大小如何，更新都是即时的。
-
-### 3. 优化的构建
-
-生产构建使用 Rollup，输出高度优化的静态资源。
-
-## 总结
-
-Vite 让前端开发变得更加高效和愉悦。
-    `.trim()
+    return {
+      slug,
+      title: data.title,
+      date: data.date,
+      tags,
+      excerpt,
+      content: body
+    };
+  } catch (error) {
+    console.warn(`[blog] 解析文件 ${path} 失败:`, error);
+    return null;
   }
-];
+}
+
+// 构建时生成文章列表
+const posts: BlogPost[] = Object.entries(modules)
+  .map(([path, content]) => parseMdxFile(path, content))
+  .filter((post): post is BlogPost => post !== null)
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+console.log(`[blog] 加载了 ${posts.length} 篇文章`);
 
 export function getAllPosts(): BlogPost[] {
-  return posts.sort((a, b) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  return posts;
 }
 
 export function getRecentPosts(count: number = 3): BlogPost[] {
-  return getAllPosts().slice(0, count);
+  return posts.slice(0, count);
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {
@@ -150,30 +117,15 @@ export function generateExcerpt(content: string, maxLength: number = 200): strin
 }
 
 export function parseFrontmatter(fileContent: string): { meta: BlogPostMeta; content: string } {
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
-  const match = fileContent.match(frontmatterRegex);
-
-  if (!match) {
-    throw new Error('Invalid frontmatter format');
-  }
-
-  const [, frontmatter, content] = match;
-  const meta: Partial<BlogPostMeta> = {};
-
-  frontmatter.split('\n').forEach(line => {
-    const [key, ...valueParts] = line.split(':');
-    if (key && valueParts.length > 0) {
-      const value = valueParts.join(':').trim();
-      if (key === 'tags') {
-        meta.tags = JSON.parse(value.replace(/'/g, '"'));
-      } else {
-        (meta as Record<string, string>)[key.trim()] = value;
-      }
-    }
-  });
+  const { data, content } = matter(fileContent);
 
   return {
-    meta: meta as BlogPostMeta,
+    meta: {
+      title: data.title || '',
+      date: data.date || '',
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      excerpt: data.excerpt || ''
+    },
     content: content.trim()
   };
 }
