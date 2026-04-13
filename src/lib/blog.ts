@@ -3,6 +3,22 @@ import type { BlogPost, BlogPostMeta } from '../types/blog';
 // 示例文章数据（实际项目中可以通过 import.meta.glob 加载 MDX 文件）
 const posts: BlogPost[] = [
   {
+    slug: 'ce-shi',
+    title: '测试',
+    date: '2026-04-13',
+    tags: ['测试1'],
+    excerpt: '这是一次测试',
+    content: `
+## 代码示例
+
+\`\`\`tsx
+function App() {
+   return <h1>Hello World</h1>
+}
+\`\`\`
+    `.trim()
+  },
+  {
     slug: 'hello-world',
     title: 'Hello World - 开启我的博客之旅',
     date: '2024-04-12',
