@@ -1,96 +1,21 @@
-import matter from 'gray-matter';
 import type { BlogPost, BlogPostMeta } from '../types/blog';
+// @ts-expect-error 虚拟模块
+import { posts } from 'virtual:blog-posts';
 
-// 构建时动态导入所有 MDX 文件（Vite 特性）
-const modules = import.meta.glob('/src/content/blog/*.mdx', {
-  eager: true,
-  as: 'raw'
-}) as Record<string, string>;
+const typedPosts: BlogPost[] = posts;
 
-/**
- * 从文件名提取 slug（移除日期前缀）
- * 例如: /src/content/blog/2024-04-12-hello-world.mdx -> hello-world
- * 例如: /src/content/blog/2026-04-13-测试.mdx -> 测试
- */
-function extractSlugFromPath(path: string): string {
-  const filename = path.replace('/src/content/blog/', '').replace(/\.mdx$/, '');
-  // 移除日期前缀 (YYYY-MM-DD-)
-  return filename.replace(/^\d{4}-\d{2}-\d{2}-/, '');
-}
-
-/**
- * 解析单个 MDX 文件，提取 frontmatter 和正文
- */
-function parseMdxFile(path: string, fileContent: string): BlogPost | null {
-  try {
-    const { data, content: body } = matter(fileContent);
-
-    // 验证必填字段
-    if (!data.title || typeof data.title !== 'string') {
-      console.warn(`[blog] 跳过文件 ${path}: 缺少 title 字段`);
-      return null;
-    }
-
-    if (!data.date) {
-      console.warn(`[blog] 跳过文件 ${path}: 缺少 date 字段`);
-      return null;
-    }
-
-    // 解析日期
-    const dateObj = new Date(data.date);
-    if (isNaN(dateObj.getTime())) {
-      console.warn(`[blog] 跳过文件 ${path}: 无效的 date 格式 "${data.date}"`);
-      return null;
-    }
-
-    // 处理 tags（可能是数组或字符串）
-    let tags: string[] = [];
-    if (Array.isArray(data.tags)) {
-      tags = data.tags.filter((t): t is string => typeof t === 'string');
-    } else if (typeof data.tags === 'string') {
-      tags = [data.tags];
-    }
-
-    // 处理 excerpt（可选字段）
-    const excerpt = data.excerpt || generateExcerpt(body, 200);
-
-    const slug = extractSlugFromPath(path);
-
-    // 确保 date 是字符串格式 (YYYY-MM-DD)
-    const dateString = dateObj.toISOString().split('T')[0];
-
-    return {
-      slug,
-      title: data.title,
-      date: dateString,
-      tags,
-      excerpt,
-      content: body
-    };
-  } catch (error) {
-    console.warn(`[blog] 解析文件 ${path} 失败:`, error);
-    return null;
-  }
-}
-
-// 构建时生成文章列表
-const posts: BlogPost[] = Object.entries(modules)
-  .map(([path, content]) => parseMdxFile(path, content))
-  .filter((post): post is BlogPost => post !== null)
-  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-console.log(`[blog] 加载了 ${posts.length} 篇文章`);
+console.log(`[blog] 加载了 ${typedPosts.length} 篇文章`);
 
 export function getAllPosts(): BlogPost[] {
-  return posts;
+  return typedPosts;
 }
 
 export function getRecentPosts(count: number = 3): BlogPost[] {
-  return posts.slice(0, count);
+  return typedPosts.slice(0, count);
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {
-  const post = posts.find(post => post.slug === slug);
+  const post = typedPosts.find(post => post.slug === slug);
   return post || null;
 }
 
@@ -120,15 +45,38 @@ export function generateExcerpt(content: string, maxLength: number = 200): strin
 }
 
 export function parseFrontmatter(fileContent: string): { meta: BlogPostMeta; content: string } {
-  const { data, content } = matter(fileContent);
+  // 简单的 frontmatter 解析
+  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
+  const match = fileContent.match(frontmatterRegex);
+
+  if (!match) {
+    return {
+      meta: { title: '', date: '', tags: [], excerpt: '' },
+      content: fileContent
+    };
+  }
+
+  const [, frontmatter, content] = match;
+  const meta: Partial<BlogPostMeta> = {};
+
+  frontmatter.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split(':');
+    if (key && valueParts.length > 0) {
+      const value = valueParts.join(':').trim();
+      if (key === 'tags') {
+        try {
+          meta.tags = JSON.parse(value.replace(/'/g, '"'));
+        } catch {
+          meta.tags = [];
+        }
+      } else {
+        (meta as Record<string, string>)[key.trim()] = value;
+      }
+    }
+  });
 
   return {
-    meta: {
-      title: data.title || '',
-      date: data.date || '',
-      tags: Array.isArray(data.tags) ? data.tags : [],
-      excerpt: data.excerpt || ''
-    },
+    meta: meta as BlogPostMeta,
     content: content.trim()
   };
 }
