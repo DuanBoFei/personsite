@@ -13,5 +13,6 @@ export default defineConfig({
       rehypePlugins: [],
     }),
   ],
-  base: '/personsite/',
+  // Netlify 使用根路径，GitHub Pages 使用 /personsite/
+  base: process.env.NETLIFY ? '/' : '/personsite/',
 })
